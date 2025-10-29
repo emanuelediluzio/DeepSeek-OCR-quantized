@@ -181,6 +181,8 @@ resolution, attention implementation, or even disabling
 > - Install the optional [bitsandbytes](https://github.com/TimDettmers/bitsandbytes)
 >   package (`pip install bitsandbytes`).
 > - Use a CUDA-capable GPU; CPU-only execution is not supported for 4-bit loading.
+> - Run the commands from the `DeepSeek-OCR-master/DeepSeek-OCR-hf` directory, where
+>   both the quantization helper and the Transformers inference script live.
 
 1. **Create a 4-bit checkpoint.**
    Run the provided helper to export the model weights, tokenizer, and
@@ -195,6 +197,8 @@ resolution, attention implementation, or even disabling
    `--bnb-quant-type` are available for advanced control over the conversion.
    Use `--no-trust-remote-code` if you prefer to avoid executing custom code
    from the original checkpoint while exporting.
+   The script saves the quantized weights, tokenizer, and a
+   `quantization_summary.json` metadata file into the target directory.
 
 2. **Load the quantized checkpoint for inference.**
    Point `run_dpsk_ocr.py` to the exported directory and enable the 4-bit loader:
