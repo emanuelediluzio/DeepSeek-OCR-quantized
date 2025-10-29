@@ -211,9 +211,8 @@ resolution, attention implementation, or even disabling
      --quantization 4bit
    ```
 
-   The `--quantization 4bit` flag enables the memory-saving bitsandbytes loader.
-   You can still adjust the usual prompt, resolution, device-map, and other
-   CLI options (see `python run_dpsk_ocr.py --help`).
+   The CLI also supports standard switches for prompt editing, resolution
+   changes, and device placement (see `python run_dpsk_ocr.py --help`).
 
 ## Support-Modes
 The current open-source model supports the following modes:
