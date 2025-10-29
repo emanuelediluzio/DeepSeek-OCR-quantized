@@ -163,29 +163,58 @@ for output in model_outputs:
 ```
 ## Transformers-Inference
 - Transformers
-```python
-from transformers import AutoModel, AutoTokenizer
-import torch
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-model_name = 'deepseek-ai/DeepSeek-OCR'
-
-tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-model = AutoModel.from_pretrained(model_name, _attn_implementation='flash_attention_2', trust_remote_code=True, use_safetensors=True)
-model = model.eval().cuda().to(torch.bfloat16)
-
-# prompt = "<image>\nFree OCR. "
-prompt = "<image>\n<|grounding|>Convert the document to markdown. "
-image_file = 'your_image.jpg'
-output_path = 'your/output/dir'
-
-res = model.infer(tokenizer, prompt=prompt, image_file=image_file, output_path = output_path, base_size = 1024, image_size = 640, crop_mode=True, save_results = True, test_compress = True)
-```
-or you can
 ```Shell
 cd DeepSeek-OCR-master/DeepSeek-OCR-hf
-python run_dpsk_ocr.py
+python run_dpsk_ocr.py \
+  --image-file path/to/your_image.jpg \
+  --output-path outputs/
 ```
+
+The helper exposes additional switches for changing the prompt, image
+resolution, attention implementation, or even disabling
+`trust_remote_code` when loading checkpoints. Run
+`python run_dpsk_ocr.py --help` to list every option.
+
+### 4-bit quantization workflow
+
+> **Prerequisites:**
+> - Install the optional [bitsandbytes](https://github.com/TimDettmers/bitsandbytes)
+>   package (`pip install bitsandbytes`).
+> - Use a CUDA-capable GPU; CPU-only execution is not supported for 4-bit loading.
+> - Run the commands from the `DeepSeek-OCR-master/DeepSeek-OCR-hf` directory, where
+>   both the quantization helper and the Transformers inference script live.
+
+1. **Create a 4-bit checkpoint.**
+   Run the provided helper to export the model weights, tokenizer, and
+   quantization metadata in a new directory:
+
+   ```Shell
+   python DeepSeek-OCR-master/DeepSeek-OCR-hf/quantize_to_4bit.py \
+     --output-dir checkpoints/deepseek-ocr-4bit
+   ```
+
+   Additional options such as `--model-name`, `--bnb-compute-dtype`, and
+   `--bnb-quant-type` are available for advanced control over the conversion.
+   Use `--no-trust-remote-code` if you prefer to avoid executing custom code
+   from the original checkpoint while exporting.
+   The script saves the quantized weights, tokenizer, and a
+   `quantization_summary.json` metadata file into the target directory.
+
+2. **Load the quantized checkpoint for inference.**
+   Point `run_dpsk_ocr.py` to the exported directory and enable the 4-bit loader:
+
+   ```Shell
+   python run_dpsk_ocr.py \
+     --image-file path/to/your_image.jpg \
+     --output-path outputs/ \
+     --model-name checkpoints/deepseek-ocr-4bit \
+     --quantization 4bit
+   ```
+
+   The `--quantization 4bit` flag enables the memory-saving bitsandbytes loader.
+   You can still adjust the usual prompt, resolution, device-map, and other
+   CLI options (see `python run_dpsk_ocr.py --help`).
+
 ## Support-Modes
 The current open-source model supports the following modes:
 - Native resolution:
